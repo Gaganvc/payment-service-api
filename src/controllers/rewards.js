@@ -31,12 +31,17 @@ export async function claimReward(req, res) {
             await lockWallet(client, playerId);
 
             // Try to insert the claim - unique constraint prevents duplicates
+            // Use savepoint to handle unique violation without aborting transaction
+            await client.query('SAVEPOINT claim_insert');
             try {
                 await client.query(
                     'INSERT INTO claimed_rewards (player_id, reward_id) VALUES ($1, $2)',
                     [playerId, rewardId]
                 );
             } catch (dbError) {
+                // Rollback to savepoint on unique violation
+                await client.query('ROLLBACK TO SAVEPOINT claim_insert');
+
                 // Unique violation = already claimed
                 if (dbError.code === '23505') {
                     // Get existing claim details

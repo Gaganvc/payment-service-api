@@ -74,7 +74,7 @@ describe('Game Economy Service API', () => {
         await pool.query('DELETE FROM inventory WHERE player_id LIKE \'test_player_%\'');
         await pool.query('DELETE FROM claimed_rewards WHERE player_id LIKE \'test_player_%\'');
         await pool.query('DELETE FROM wallets WHERE player_id LIKE \'test_player_%\'');
-        await pool.end();
+        await pool.query('DELETE FROM ledger WHERE player_id LIKE \'test_player_%\'');
     });
 
     describe('POST /v1/wallets/:playerId/credit', () => {

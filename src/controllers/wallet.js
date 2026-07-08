@@ -251,7 +251,7 @@ export async function getWallet(req, res) {
 
         return res.status(200).json({
             playerId,
-            balance: wallet.balance,
+            balance: Number(wallet.balance),
             createdAt: wallet.created_at,
             updatedAt: wallet.updated_at,
             inventory: inventoryResult.rows.map(row => ({

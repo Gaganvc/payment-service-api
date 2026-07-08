@@ -24,31 +24,45 @@ pool.on('error', (err) => {
 });
 
 /**
- * Execute a function within a transaction with SERIALIZABLE isolation level.
- * This prevents:
- * - Double-spends (concurrent purchases racing the same balance)
- * - Lost updates (concurrent credits overwriting each other)
- * - Phantom reads (rewards being claimed concurrently)
+ * Execute a function within a transaction with retry logic.
+ * Uses REPEATABLE READ isolation with row locks for concurrency control.
  *
  * @param {Function} callback - Async function to execute within transaction
+ * @param {number} maxRetries - Maximum retry attempts (default: 3)
  * @returns {Promise<any>} - Result of the callback
  */
-export async function withTransaction(callback) {
-    const client = await pool.connect();
+export async function withTransaction(callback, maxRetries = 3) {
+    let lastError;
 
-    try {
-        await client.query('BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const client = await pool.connect();
 
-        const result = await callback(client);
+        try {
+            await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ');
 
-        await client.query('COMMIT');
-        return result;
-    } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-    } finally {
-        client.release();
+            const result = await callback(client);
+
+            await client.query('COMMIT');
+            return result;
+        } catch (error) {
+            await client.query('ROLLBACK');
+
+            // Retry on serialization failures (40001) or concurrent updates
+            if (error.code === '40001' && attempt < maxRetries - 1) {
+                lastError = error;
+                // Exponential backoff before retry
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 10));
+                continue;
+            }
+
+            lastError = error;
+            throw error;
+        } finally {
+            client.release();
+        }
     }
+
+    throw lastError;
 }
 
 /**
@@ -73,7 +87,9 @@ export async function lockWallet(client, playerId) {
         return { balance: 0, player_id: playerId };
     }
 
-    return result.rows[0];
+    // Convert balance to number (PostgreSQL returns BIGINT as string)
+    const wallet = result.rows[0];
+    return { balance: Number(wallet.balance), player_id: wallet.player_id };
 }
 
 /**

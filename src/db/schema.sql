@@ -16,11 +16,11 @@ CREATE TABLE IF NOT EXISTS inventory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     player_id TEXT NOT NULL REFERENCES wallets(player_id) ON DELETE CASCADE,
     item_id TEXT NOT NULL,
-    acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Index for querying player's inventory quickly
-    -- Index for supporting idempotent purchase lookups
-    INDEX idx_inventory_player (player_id)
+    acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Index for querying player's inventory quickly
+CREATE INDEX IF NOT EXISTS idx_inventory_player ON inventory(player_id);
 
 -- Claimed Rewards: One-time reward claims per player
 -- Unique constraint ensures a player can only claim a specific reward once
@@ -58,9 +58,11 @@ CREATE TABLE IF NOT EXISTS ledger (
     new_balance BIGINT NOT NULL,
     reason TEXT NOT NULL,
     related_item_id TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    INDEX idx_ledger_player (player_id)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Index for ledger queries by player
+CREATE INDEX IF NOT EXISTS idx_ledger_player ON ledger(player_id);
 
 -- Function to update wallet updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -71,6 +73,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS wallets_update_updated_at ON wallets;
 CREATE TRIGGER wallets_update_updated_at
     BEFORE UPDATE ON wallets
     FOR EACH ROW
