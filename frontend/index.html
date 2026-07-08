@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Economy Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-credit {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: #fff;
+        }
+
+        .btn-credit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 206, 201, 0.4);
+        }
+
+        .btn-purchase {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+        }
+
+        .btn-purchase:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-claim {
+            background: linear-gradient(135deg, #fdcb6e, #f39c12);
+            color: #fff;
+        }
+
+        .btn-claim:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(253, 203, 110, 0.4);
+        }
+
+        .btn-get {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: #fff;
+        }
+
+        .btn-get:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(9, 132, 227, 0.4);
+        }
+
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .response.success {
+            border-left: 3px solid #00b894;
+        }
+
+        .response.error {
+            border-left: 3px solid #ff7675;
+        }
+
+        .wallet-display {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .wallet-display .balance {
+            font-size: 2rem;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .wallet-display .label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .inventory-item, .claimed-reward {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 5px 0 0;
+            font-size: 0.85rem;
+        }
+
+        .api-url {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #888;
+        }
+
+        .api-url input {
+            width: 300px;
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Game Economy Service</h1>
+        <p class="subtitle">Durable Wallet API Interface</p>
+
+        <div class="api-url">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:3000">
+        </div>
+
+        <div class="grid">
+            <!-- Credit Wallet -->
+            <div class="card">
+                <h2>💰 Credit Wallet</h2>
+                <div class="form-group">
+                    <label>Player ID</label>
+                    <input type="text" id="credit-player" value="player123" placeholder="Enter player ID">
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="credit-amount" value="100" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label>Reason</label>
+                    <input type="text" id="credit-reason" value="battle_win" placeholder="Enter reason">
+                </div>
+                <button class="btn-credit" onclick="creditWallet()">Credit</button>
+                <div class="loading" id="credit-loading">Processing...</div>
+                <div class="response" id="credit-response"></div>
+            </div>
+
+            <!-- Purchase Item -->
+            <div class="card">
+                <h2>🛒 Purchase Item</h2>
+                <div class="form-group">
+                    <label>Player ID</label>
+                    <input type="text" id="purchase-player" value="player123" placeholder="Enter player ID">
+                </div>
+                <div class="form-group">
+                    <label>Item ID</label>
+                    <input type="text" id="purchase-item" value="sword" placeholder="Enter item ID">
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="number" id="purchase-price" value="50" placeholder="Enter price">
+                </div>
+                <button class="btn-purchase" onclick="purchaseItem()">Purchase</button>
+                <div class="loading" id="purchase-loading">Processing...</div>
+                <div class="response" id="purchase-response"></div>
+            </div>
+
+            <!-- Claim Reward -->
+            <div class="card">
+                <h2>🎁 Claim Reward</h2>
+                <div class="form-group">
+                    <label>Player ID</label>
+                    <input type="text" id="claim-player" value="player123" placeholder="Enter player ID">
+                </div>
+                <div class="form-group">
+                    <label>Reward ID</label>
+                    <input type="text" id="claim-reward" value="daily_bonus" placeholder="Enter reward ID">
+                </div>
+                <button class="btn-claim" onclick="claimReward()">Claim Reward</button>
+                <div class="loading" id="claim-loading">Processing...</div>
+                <div class="response" id="claim-response"></div>
+            </div>
+
+            <!-- Get Wallet -->
+            <div class="card">
+                <h2>👛 Get Wallet</h2>
+                <div class="form-group">
+                    <label>Player ID</label>
+                    <input type="text" id="get-player" value="player123" placeholder="Enter player ID">
+                </div>
+                <button class="btn-get" onclick="getWallet()">Get Wallet</button>
+                <div class="loading" id="get-loading">Loading...</div>
+                <div class="response" id="get-response"></div>
+                <div class="wallet-display" id="wallet-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = document.getElementById('apiUrl').value;
+
+        // Update API base on input change
+        document.getElementById('apiUrl').addEventListener('change', (e) => {
+            window.API_BASE = e.target.value;
+        });
+
+        async function makeRequest(endpoint, method = 'GET', body = null, idempotencyKey = null) {
+            const baseUrl = document.getElementById('apiUrl').value;
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            if (idempotencyKey) {
+                options.headers['Idempotency-Key'] = idempotencyKey;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}${endpoint}`, options);
+                const data = await response.json();
+                return { status: response.status, data, headers: response.headers };
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        function displayResponse(elementId, result) {
+            const element = document.getElementById(elementId);
+            if (result.error) {
+                element.className = 'response error';
+                element.textContent = `Error: ${result.error}`;
+            } else {
+                element.className = 'response success';
+                element.textContent = JSON.stringify(result.data, null, 2);
+            }
+        }
+
+        function displayWallet(data) {
+            const display = document.getElementById('wallet-display');
+            if (data.error) {
+                display.innerHTML = `<p style="color: #ff7675;">${data.error}</p>`;
+                return;
+            }
+
+            const inventoryHtml = (data.inventory || []).map(item =>
+                `<span class="inventory-item">📦 ${item.itemId}</span>`
+            ).join('');
+
+            const rewardsHtml = (data.claimedRewards || []).map(reward =>
+                `<span class="claimed-reward">🏆 ${reward.rewardId}</span>`
+            ).join('');
+
+            display.innerHTML = `
+                <div class="label">Balance</div>
+                <div class="balance">${data.balance} 💰</div>
+                <div style="margin-top: 15px;">
+                    <div class="label">Inventory</div>
+                    <div>${inventoryHtml || '<span style="color: #666;">No items</span>'}</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div class="label">Claimed Rewards</div>
+                    <div>${rewardsHtml || '<span style="color: #666;">No rewards claimed</span>'}</div>
+                </div>
+            `;
+        }
+
+        function setLoading(loadingId, active) {
+            document.getElementById(loadingId).classList.toggle('active', active);
+        }
+
+        async function creditWallet() {
+            const playerId = document.getElementById('credit-player').value;
+            const amount = parseInt(document.getElementById('credit-amount').value);
+            const reason = document.getElementById('credit-reason').value;
+            const idempotencyKey = `credit-${Date.now()}`;
+
+            if (!playerId || !amount || !reason) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            setLoading('credit-loading', true);
+            const result = await makeRequest(`/v1/wallets/${playerId}/credit`, 'POST', {
+                amount,
+                reason
+            }, idempotencyKey);
+            setLoading('credit-loading', false);
+
+            displayResponse('credit-response', result);
+        }
+
+        async function purchaseItem() {
+            const playerId = document.getElementById('purchase-player').value;
+            const itemId = document.getElementById('purchase-item').value;
+            const price = parseInt(document.getElementById('purchase-price').value);
+            const idempotencyKey = `purchase-${Date.now()}`;
+
+            if (!playerId || !itemId || !price) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            setLoading('purchase-loading', true);
+            const result = await makeRequest(`/v1/wallets/${playerId}/purchase`, 'POST', {
+                itemId,
+                price
+            }, idempotencyKey);
+            setLoading('purchase-loading', false);
+
+            displayResponse('purchase-response', result);
+        }
+
+        async function claimReward() {
+            const playerId = document.getElementById('claim-player').value;
+            const rewardId = document.getElementById('claim-reward').value;
+            const idempotencyKey = `claim-${Date.now()}`;
+
+            if (!playerId || !rewardId) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            setLoading('claim-loading', true);
+            const result = await makeRequest(`/v1/rewards/${rewardId}/claim`, 'POST', {
+                playerId
+            }, idempotencyKey);
+            setLoading('claim-loading', false);
+
+            displayResponse('claim-response', result);
+        }
+
+        async function getWallet() {
+            const playerId = document.getElementById('get-player').value;
+
+            if (!playerId) {
+                alert('Please enter a player ID');
+                return;
+            }
+
+            setLoading('get-loading', true);
+            const result = await makeRequest(`/v1/wallets/${playerId}`, 'GET');
+            setLoading('get-loading', false);
+
+            displayResponse('get-response', result);
+            displayWallet(result.data);
+        }
+
+        // Auto-load wallet on page load
+        window.addEventListener('load', () => {
+            getWallet();
+        });
+    </script>
+</body>
+</html>

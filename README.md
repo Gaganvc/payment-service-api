@@ -210,6 +210,32 @@ npm test
 
 See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
 
+## Frontend Interface
+
+A web-based UI is available for testing the API interactively.
+
+### Using the Frontend
+
+1. **Start the backend service** (using Docker or manual setup above)
+
+2. **Open the frontend**
+   - Simply open `frontend/index.html` in your browser
+   - Or use a local server: `npx serve frontend`
+
+3. **Features**
+   - 💰 Credit wallet with custom amount and reason
+   - 🛒 Purchase items (deducts balance, adds to inventory)
+   - 🎁 Claim one-time rewards
+   - 👛 View wallet state (balance, inventory, claimed rewards)
+
+### Frontend Screenshot
+
+The frontend provides:
+- Interactive forms for each API endpoint
+- Real-time response display
+- Visual wallet display with balance, inventory items, and claimed rewards
+- Configurable API URL (defaults to `http://localhost:3000`)
+
 ## License
 
 MIT
