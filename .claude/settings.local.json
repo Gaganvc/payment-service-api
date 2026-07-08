@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(powershell -Command \"Compress-Archive -Path @\\('src','test','*.md','package.json','Dockerfile','docker-compose.yml','.gitignore','.env.example'\\) -DestinationPath 'game-economy-submission.zip' -Force\")",
+      "Bash(powershell -Command \"Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::OpenRead\\('game-economy-submission.zip'\\).Entries | Select-Object Name\")"
+    ]
+  }
+}

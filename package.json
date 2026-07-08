@@ -1,0 +1,27 @@
+{
+  "name": "durable-game-economy-service",
+  "version": "1.0.0",
+  "description": "A durable wallet/economy service with exactly-once semantics and crash durability",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "migrate": "node src/db/migrate.js",
+    "lint": "echo 'No linter configured'",
+    "docker:build": "docker build -t game-economy .",
+    "docker:run": "docker-compose up"
+  },
+  "keywords": ["economy", "wallet", "game", "idempotency", "durable"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
